@@ -406,15 +406,8 @@ export default function Home() {
   }
   function addDescriptionHint(hint: string) { setDescription((current) => current ? `${current}، ${hint}` : hint); }
   async function submitLocalLogin(credentials: { name: string; email: string }) {
-    window.localStorage.setItem("zadak-user-info-v1", JSON.stringify({ ...credentials, language, savedAt: Date.now() }));
-    try {
-      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(credentials), credentials: "include" });
-      if (!response.ok) throw new Error("login_failed");
-      setLoginOpen(false);
-      window.location.reload();
-    } catch {
-      notify("error", language === "ar" ? "تعذر تسجيل الدخول الآن. تحقق من إعدادات قاعدة البيانات في Render." : language === "tr" ? "Giriş yapılamadı. Render veritabanı ayarlarını kontrol edin." : "Sign in failed. Check the Render database settings.");
-    }
+    signInLocal({ ...credentials, language });
+    setLoginOpen(false);
   }
 
   function closeMealModal() { if (analyzeMutation.isPending) return; setMealModal(false); setDescription(""); setImageData(undefined); setImageMimeType(undefined); setAnalysisResult(undefined); analysisBaseRef.current = undefined; setPlateSize("medium"); setAnalysisPlateSize("medium"); setFrequentMealType("snack"); }
