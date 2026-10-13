@@ -1,6 +1,13 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 
+import zadakOgAsset from "@/assets/zadak-og.png.asset.json";
+
+const SITE_ORIGIN = "https://zadiq-arabian-meals.lovable.app";
+const ogImage = `${SITE_ORIGIN}${zadakOgAsset.url}`;
+
+
+
 const ZadkApp = lazy(() => import("@/components/zadk/ZadkApp"));
 
 export const Route = createFileRoute("/")({
@@ -11,7 +18,13 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "زادك AI — مساعد التغذية الذكي" },
       { property: "og:description", content: "تحليل الوجبات العربية بالذكاء الاصطناعي، تتبع السعرات والماء، وخطط تناسب هدفك." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: ogImage },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "شعار زادك AI — مساعدك الشخصي للتغذية" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: ogImage },
+
     ],
   }),
   component: Index,
