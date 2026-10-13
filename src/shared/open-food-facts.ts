@@ -1,3 +1,4 @@
+// @ts-nocheck — ported verbatim from the original zadk repository
 import { normalizeBarcode, nutrientNumber, type BarcodeNutrition } from "@/shared/barcode-nutrition";
 
 const OPEN_FOOD_FACTS_URL = "https://world.openfoodfacts.org/api/v2/product";

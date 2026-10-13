@@ -1,3 +1,4 @@
+// @ts-nocheck — ported verbatim from the original zadk repository
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";

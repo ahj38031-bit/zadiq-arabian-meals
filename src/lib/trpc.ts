@@ -19,7 +19,7 @@ type AnalyzeIn = { description?: string; imageData?: string; imageMimeType?: str
 type SaveProfileIn = Parameters<typeof store.saveProfile>[0];
 type FrequentIn = Omit<store.FrequentMeal, "id" | "createdAt">;
 type BarcodeMealIn = { name: string; brand?: string | null; mealType: store.MealType; barcode: string; servingGrams: number; calories: number; protein: number; carbs: number; fat: number; fiber: number; sugar: number; sodium: number };
-type SuggestIn = Parameters<typeof suggestCalorieAI>[0]["data"];
+type SuggestIn = { currentCalories: number; progressPercent: number; daysRemaining: number | null; goal: "lose" | "maintain" | "gain"; adjustmentDirection: "lower" | "higher"; currentWeightKg: number; targetWeightKg: number; language: "ar" | "en" | "tr" };
 
 export const trpc = {
   useUtils() {
