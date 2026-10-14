@@ -1,6 +1,6 @@
 // @ts-nocheck — ported verbatim from the original zadk repository
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, signInLocal } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { getProgressMotivationStatus } from "@/shared/progress";
 import { buildNutritionComparison } from "@/shared/nutrition-chart";
