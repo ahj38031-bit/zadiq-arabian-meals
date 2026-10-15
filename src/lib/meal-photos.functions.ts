@@ -15,7 +15,7 @@ export const uploadMealPhoto = createServerFn({ method: "POST" })
     const m = /^data:image\/(jpeg|png|webp);base64,(.*)$/s.exec(data.imageData)!;
     const mime = `image/${m[1]}`;
     const ext = m[1] === "jpeg" ? "jpg" : m[1];
-    const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+    const bytes = Uint8Array.from(atob(m[2]!), (c) => c.charCodeAt(0));
     const key = `${crypto.randomUUID()}.${ext}`;
     const { error } = await supabaseAdmin.storage.from(BUCKET).upload(key, bytes, { contentType: mime, upsert: false });
     if (error) { console.error("[photo upload]", error.message); throw new Error("upload_failed"); }
