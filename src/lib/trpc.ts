@@ -1,3 +1,4 @@
+import { uploadMealPhoto, deleteMealPhoto } from "@/lib/meal-photos.functions";
 // Drop-in replacement for the original tRPC client: same hook shape, but data
 // lives in localStorage and AI/barcode calls go to server functions.
 import { useMutation, useQuery, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
@@ -37,11 +38,14 @@ export const trpc = {
       useQuery: (input: { barcode: string }, opts?: QOpts) => useQuery({ queryKey: ["zadk", "barcode", input.barcode], queryFn: () => lookupBarcodeFn({ data: input }), ...opts, retry: false }),
     },
     analyzeMeal: mutation(async (input: AnalyzeIn) => {
-      const analysis = await analyzeMealAI({ data: { description: input.description, imageData: input.imageData, plateSize: input.plateSize ?? "medium" } });
+      const [analysis, imageKey] = await Promise.all([
+        analyzeMealAI({ data: { description: input.description, imageData: input.imageData, plateSize: input.plateSize ?? "medium" } }),
+        input.imageData ? uploadMealPhoto({ data: { imageData: input.imageData } }).then((r) => r.key).catch(() => null) : Promise.resolve(null),
+      ]);
       const meal = store.createMeal({
         mealName: analysis.mealName.slice(0, 180), description: input.description ?? null, mealType: analysis.mealType,
         calories: analysis.calories, protein: analysis.protein, carbs: analysis.carbs, fat: analysis.fat, fiber: analysis.fiber, sugar: analysis.sugar, sodium: analysis.sodium,
-        confidence: analysis.confidence,
+        confidence: analysis.confidence, imageKey,
         aiSummary: JSON.stringify({ summary: analysis.summary, items: analysis.items, ingredients: analysis.ingredients, assumptions: analysis.assumptions, calorieMismatch: analysis.calorieMismatch }),
       });
       return { meal, analysis };
@@ -57,7 +61,7 @@ export const trpc = {
       calories: input.calories, protein: Math.round(input.protein), carbs: Math.round(input.carbs), fat: Math.round(input.fat), fiber: Math.round(input.fiber), sugar: Math.round(input.sugar), sodium: input.sodium,
       confidence: 100, aiSummary: JSON.stringify({ source: "open-food-facts", barcode: input.barcode, servingGrams: input.servingGrams, brand: input.brand ?? null }),
     })),
-    deleteMeal: mutation((input: { id: number }) => store.deleteMeal(input.id)),
+    deleteMeal: mutation((input: { id: number }) => { const r = store.deleteMeal(input.id); if (r.imageKey) deleteMealPhoto({ data: { key: r.imageKey } }).catch(() => {}); return r; }),
     clearToday: mutation((_input?: void) => store.clearToday()),
   },
 };
