@@ -83,19 +83,20 @@ export function getDashboard() {
   return { profile, meals, frequentMeals, weightLogs };
 }
 
-export type NewMeal = Omit<Meal, "id" | "createdAt" | "imageKey" | "imageUrl"> & { imageUrl?: string | null };
+export type NewMeal = Omit<Meal, "id" | "createdAt" | "imageKey" | "imageUrl"> & { imageUrl?: string | null; imageKey?: string | null };
 
 export function createMeal(input: NewMeal): Meal {
   return mutate((d) => {
-    const row = { ...input, imageKey: null, imageUrl: input.imageUrl ?? null, id: d.nextId++, createdAt: Date.now() };
+    const row = { ...input, imageKey: input.imageKey ?? null, imageUrl: input.imageUrl ?? null, id: d.nextId++, createdAt: Date.now() };
     d.meals.push(row);
     return { ...row, createdAt: new Date(row.createdAt) };
   });
 }
 
 export function deleteMeal(id: number) {
-  mutate((d) => { d.meals = d.meals.filter((m) => m.id !== id); });
-  return { success: true } as const;
+  let imageKey: string | null = null;
+  mutate((d) => { imageKey = d.meals.find((m) => m.id === id)?.imageKey ?? null; d.meals = d.meals.filter((m) => m.id !== id); });
+  return { success: true, imageKey: imageKey as string | null } as const;
 }
 
 export function clearToday() {
