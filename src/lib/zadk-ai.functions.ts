@@ -1,26 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
-const MODEL = "openai/gpt-6-astra";
+// OpenRouter is called only from the server; the key never reaches the browser.
+const GATEWAY = "https://openrouter.ai/api/v1/chat/completions";
+const MODEL = "openai/gpt-4o-mini";
 
 type Content = string | Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string; detail: "high" }>;
 
 async function callJson(system: string, user: Content, name: string, schema: object, maxTokens: number): Promise<unknown> {
-  const key = process.env["LOVABLE_API_KEY"];
+  const key = process.env["OPENROUTER_API_KEY"];
   if (!key) throw new Error("AI غير مهيأ");
+  const content = typeof user === "string" ? user : user.map((p) =>
+    p.type === "input_text" ? { type: "text", text: p.text } : { type: "image_url", image_url: { url: p.image_url, detail: p.detail } });
   const res = await fetch(GATEWAY, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "HTTP-Referer": "https://zadiq-arabian-meals.lovable.app", "X-Title": "Zadak AI" },
     body: JSON.stringify({
       model: MODEL,
       stream: true,
-      store: false,
-      reasoning: { effort: "low" },
-      max_output_tokens: maxTokens,
-      instructions: system,
-      input: [{ role: "user", content: user }],
-      text: { format: { type: "json_schema", name, strict: true, schema } },
+      max_tokens: maxTokens,
+      messages: [{ role: "system", content: system }, { role: "user", content }],
+      response_format: { type: "json_schema", json_schema: { name, strict: true, schema } },
     }),
   });
   if (!res.ok || !res.body) {
@@ -46,9 +46,11 @@ async function callJson(system: string, user: Content, name: string, schema: obj
       if (!payload || payload === "[DONE]") continue;
       try {
         const ev = JSON.parse(payload);
-        if (ev.type === "response.output_text.delta") text += ev.delta ?? "";
-        if (ev.type === "response.refusal.delta" || ev.type === "response.failed") throw new Error("ai_refused");
-      } catch (e) { if ((e as Error).message === "ai_refused") throw e; }
+        if (ev.error) throw new Error("ai_failed");
+        const d = ev.choices?.[0]?.delta;
+        if (d?.refusal) throw new Error("ai_refused");
+        text += d?.content ?? "";
+      } catch (e) { const m = (e as Error).message; if (m === "ai_refused" || m === "ai_failed") throw e; }
     }
   }
   return JSON.parse(text);
